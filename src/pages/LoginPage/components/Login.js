@@ -1,13 +1,29 @@
 import React, { useState } from 'react';
-import {Link, useNavigate} from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from "../styles/style.module.scss"
+
 function Login() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [authenticated, setAuthenticated] = useState(false);
+    const [errors, setErrors] = useState({});
+
     let navigate = useNavigate();
+
     const handleSubmit = async (event) => {
         event.preventDefault();
+
+        if (!username || !password) {
+            setErrors({ message: 'Email and password are required' });
+            return;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(username)) {
+            setErrors({ message: 'Invalid email format' });
+            return;
+        }
+
         const encodedCredentials = btoa(`${username}:${password}`);
         const response = await fetch('http://localhost:5000/user/self', {
             headers: {
@@ -16,10 +32,10 @@ function Login() {
         });
 
         if (response.ok) {
-            sessionStorage.setItem('Authorization', `Basic ${encodedCredentials}`)
+            sessionStorage.setItem('Authorization', `Basic ${encodedCredentials}`);
             setAuthenticated(true);
         } else {
-            alert('Authentication failed');
+            setErrors({ message: 'Authentication failed' });
         }
     };
 
@@ -29,20 +45,30 @@ function Login() {
 
     return (
         <form onSubmit={handleSubmit}>
-            <br/>
+            <br />
             <label>
                 Email:
             </label>
-            <input type="text" value={username} onChange={(event) => setUsername(event.target.value)} />
-            <br/>
+            <input
+                type="text"
+                value={username}
+                onChange={(event) => setUsername(event.target.value)}
+            />
+            <br />
             <label>
                 Password:
             </label>
-            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
+            <input
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+            />
             <button type="submit">Log in</button>
             <span>Forgot password ?<Link to={"/reset"}>Reset password</Link></span>
-            <br/>
+            <br />
+            {errors && <span>{errors.message}</span>}
         </form>
     );
 }
+
 export default Login;

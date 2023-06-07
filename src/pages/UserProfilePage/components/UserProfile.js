@@ -1,68 +1,92 @@
-import React, {useEffect, useState} from "react";
-import {Link, useNavigate} from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import styles from "../styles/style.module.scss"
+import styles from "../styles/style.module.scss";
 
-function UserProfile()
-{
-    let navigate = useNavigate();
-    const [data, setData] = useState([]);
-    const [locations, setLocation] = useState([])
-    const [publicad, setPublicAd] = useState([])
-    const [localad, setLocalAd] =  useState([])
+function UserProfile() {
+    const navigate = useNavigate();
+    const [data, setData] = useState({});
+    const [locations, setLocations] = useState([]);
+    const [publicad, setPublicAd] = useState([]);
+    const [localad, setLocalAd] = useState([]);
 
     const options = {
-        url: 'http://localhost:5000/user/self',
-        method: 'GET',
+        url: "http://localhost:5000/user/self",
+        method: "GET",
         headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-            "Authorization": sessionStorage.getItem("Authorization")
-        }
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json",
+            Authorization: sessionStorage.getItem("Authorization"),
+        },
     };
-    const options2 = {
-        url: 'http://localhost:5000/locations',
-        method: 'GET',
+
+    const locationOptions = {
+        url: "http://localhost:5000/locations",
+        method: "GET",
         headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-            "Authorization": sessionStorage.getItem("Authorization")
-        }
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json",
+            Authorization: sessionStorage.getItem("Authorization"),
+        },
     };
-    const options3 = {
-        url: 'http://localhost:5000/advertisement/public',
-        method: 'GET',
+
+    const publicAdOptions = {
+        url: "http://localhost:5000/advertisement/public",
+        method: "GET",
         headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-            "Authorization": sessionStorage.getItem("Authorization")
-        }
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json",
+            Authorization: sessionStorage.getItem("Authorization"),
+        },
     };
-    const options4 = {
-        url: 'http://localhost:5000/advertisement/local',
-        method: 'GET',
+
+    const localAdOptions = {
+        url: "http://localhost:5000/advertisement/local",
+        method: "GET",
         headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json',
-            "Authorization": sessionStorage.getItem("Authorization")
-        }
+            "Access-Control-Allow-Origin": "*",
+            "Content-Type": "application/json",
+            Authorization: sessionStorage.getItem("Authorization"),
+        },
     };
 
     useEffect(() => {
         const fetchData = async () => {
-            const result = await axios(options);
-            const resul = await axios(options2);
-            const res = await axios(options3);
-            const ress = await axios(options4);
-            setLocation(resul.data)
-            setData(result.data);
-            setLocalAd(ress.data);
-            setPublicAd(res.data);
+            try {
+                const [response, response2] = await Promise.all([
+                    axios(options),
+                    axios(locationOptions),
+                ]);
+                const userData = response.data;
+                const locationData = response2.data;
+
+                setData(userData);
+                setLocations(locationData);
+            } catch (error) {
+                console.error(error);
+            }
         };
+
+        const fetchData2 = async () => {
+            try {
+                const [response3, response4] = await Promise.all([
+                    axios(publicAdOptions),
+                    axios(localAdOptions),
+                ]);
+                const publicAdData = response3.data;
+                const localAdData = response4.data;
+
+                setPublicAd(publicAdData);
+                setLocalAd(localAdData);
+            } catch (error) {
+                console.error(error);
+            }
+        };
+
         fetchData();
+        fetchData2();
     }, []);
 
-    let city_name;
     return (
         <>
             <div className={styles.container}>
@@ -85,129 +109,86 @@ function UserProfile()
                 <div className={styles.value}>
                     <span className={styles.label}>Role:</span>
                     <span className="role">
-                                 {(()=>{
-                        if(data.isAdmin)
-                        {
-                            return "Administrator"
-                        }
-                        else {
-                            if(data.userStatus === "premium")
-                            {
-                                return "Premium User"
-                            }
-                            else
-                            {
-                                return "Regular User"
-                            }
-                        }
-                    })()}</span>
+            {data.isAdmin
+                ? "Administrator"
+                : data.userStatus === "premium"
+                    ? "Premium User"
+                    : "Regular User"}
+          </span>
                 </div>
                 <div className={styles.value}>
                     <span className={styles.label}>Location:</span>
-                    <span className="location">{locations.forEach((i, index)=>{
-                        if(i.id === data.idlocation)
-                        {
-                            city_name = i.city;
-                        }
-                    })} {city_name}</span>
+                    <span className="location">
+            {locations
+                .filter((location) => location.id === data.idlocation)
+                .map((location) => location.city)}
+          </span>
                 </div>
             </div>
-            <br/><br/><br/>
+            <br />
+            <br />
+            <br />
             <div>
                 <h1>MY POSTS</h1>
-                <br/>
+                <br />
                 <h2>Public posts</h2>
-                <br/>
-                {publicad.map((item, index) => (
-                    <div className={styles.listing}>
-                        {item.user_id === data.id ? <>
-                            <h2>{item.title}</h2>
-                            <p className={"date"}>{item.publishingDate}</p>
-                            {(()=>{
-                                    if(item.status === "active")
-                                    {
-                                        return <>
-                                            <span>Status:<p className={styles.active}> Active </p></span>
-                                        </>
-                                    }
-                                    if(item.status === "closed")
-                                    {
-                                        return <>
-                                            <span>Status:<p className={styles.disabled}> Closed </p></span>
-                                        </>
-                                    }
-                                    if(item.status === "confirmed")
-                                    {
-                                        return <>
-                                            <span>Status:<p className={styles.notconfirmed}> Confirmed </p></span>
-                                        </>
-                                    }
-                            })()}
-                            <Link to={"/ad/edit"} >
-                                <button className={styles.select_btn}
-                                        onClick={() =>{
-                                            if ("location_id" in item)
-                                            {
-                                                sessionStorage.setItem("ArticleId", item.id)
-                                                sessionStorage.setItem("IsLocal", 1)
-                                            }
-                                            else
-                                            {
-                                                sessionStorage.setItem("ArticleId", item.id)
-                                                sessionStorage.setItem("IsLocal", 0)
-                                            }}}>Edit</button></Link>
-                        </>: null}
-                    </div>
-                ))}
-                <br/>
-                <h2>Local posts</h2>
-                <br/>
-                <div className={styles.listing}>
-                    {localad.map((item, index) => (
-                        <div className={styles.listing}>
-                            {item.user_id === data.id ? <>
+                <br />
+                {publicad
+                    .filter((item) => item.user_id === data.id)
+                    .map((item) => (
+                        <div className={styles.listing} key={item.id}>
+                            <>
                                 <h2>{item.title}</h2>
                                 <p className={"date"}>{item.publishingDate}</p>
-                                {(()=>{
-                                    if(item.status === "active")
-                                    {
-                                        return <>
-                                            <span>Status:<p className={styles.active}> Active </p></span>
-                                        </>
-                                    }
-                                    if(item.status === "closed")
-                                    {
-                                        return <>
-                                            <span>Status:<p className={styles.disabled}> Closed </p></span>
-                                        </>
-                                    }
-                                    if(item.status === "confirmed")
-                                    {
-                                        return <>
-                                            <span>Status:<p className={styles.notconfirmed}> Confirmed </p></span>
-                                        </>
-                                    }
-                                })()}
-                                <Link to={"/ad/edit"} >
-                                    <button className={styles.select_btn}
-                                            onClick={() =>{
-                                                if ("location_id" in item)
-                                                {
-                                                    sessionStorage.setItem("ArticleId", item.id)
-                                                    sessionStorage.setItem("IsLocal", 1)
-                                                }
-                                                else
-                                                {
-                                                    sessionStorage.setItem("ArticleId", item.id)
-                                                    sessionStorage.setItem("IsLocal", 0)
-                                                }}}>Edit</button></Link>
-                            </>: null}
+                                <span>Status: </span>
+                                <p className={styles[item.status]}>{item.status}</p>
+                                <Link
+                                    to="/ad/edit"
+                                    onClick={() => {
+                                        sessionStorage.setItem("ArticleId", item.id);
+                                        sessionStorage.setItem(
+                                            "IsLocal",
+                                            "location_id" in item ? "1" : "0"
+                                        );
+                                    }}
+                                >
+                                    <button className={styles.select_btn}>Edit</button>
+                                </Link>
+                            </>
                         </div>
                     ))}
-
+                <br />
+                <h2>Local posts</h2>
+                <br />
+                <div className={styles.listing}>
+                    {localad
+                        .filter((item) => item.user_id === data.id)
+                        .map((item) => (
+                            <div className={styles.listing} key={item.id}>
+                                <>
+                                    <h2>{item.title}</h2>
+                                    <p className={"date"}>{item.publishingDate}</p>
+                                    <span>Status: </span>
+                                    <p className={styles[item.status]}>{item.status}</p>
+                                    <Link
+                                        to="/ad/edit"
+                                        onClick={() => {
+                                            sessionStorage.setItem("ArticleId", item.id);
+                                            sessionStorage.setItem(
+                                                "IsLocal",
+                                                "location_id" in item ? "1" : "0"
+                                            );
+                                        }}
+                                    >
+                                        <button className={styles.select_btn}>Edit</button>
+                                    </Link>
+                                </>
+                            </div>
+                        ))}
                 </div>
             </div>
         </>
     );
 }
-export default UserProfile
+
+export default UserProfile;
