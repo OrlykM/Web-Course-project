@@ -1,6 +1,6 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
-import Error from "../../../../../../lab5-web/src/pages/ErrorPage/components/Error";
+import Error from "../Error";
 
 describe("Error component", () => {
     test("should render error message with code 404", () => {

@@ -1,7 +1,9 @@
 import React from "react";
 import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
-import HeaderNotLogined from "../../../../../../lab5-web/src/Templates/HeaderNotLogined/components/HeaderNotLogined";
+import { toBeInTheDocument } from "@testing-library/jest-dom/extend-expect";
+import { useNavigate } from "react-router-dom";
+import HeaderNotLogined from "../HeaderNotLogined";
 
 describe("HeaderNotLogined", () => {
     test("should render header links correctly", () => {
